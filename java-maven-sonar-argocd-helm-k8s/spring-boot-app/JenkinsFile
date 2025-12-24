@@ -15,9 +15,9 @@ pipeline {
 
   stages {
 
-    stage('Checkout') {
+    stage('Debug Image Name') {
       steps {
-        sh 'echo "Checkout completed"'
+        sh 'echo "Docker image being used => ${DOCKER_IMAGE}"'
       }
     }
 
@@ -26,7 +26,6 @@ pipeline {
         sh '''
           apt-get update
           apt-get install -y docker.io
-          docker --version
         '''
       }
     }
@@ -90,6 +89,5 @@ pipeline {
         }
       }
     }
-
   }
 }
