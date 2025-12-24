@@ -7,7 +7,7 @@ pipeline {
   }
 
   environment {
-    SONAR_URL = "http://3.86.154.176:9000"
+    SONAR_URL    = "http://3.86.154.176:9000"
     DOCKER_IMAGE = "rajeshk23/ultimate-cicd:${BUILD_NUMBER}"
     GIT_REPO_NAME = "Jenkins-Zero-To-Hero"
     GIT_USER_NAME = "Rajeshk-23"
@@ -26,11 +26,12 @@ pipeline {
         sh '''
           apt-get update
           apt-get install -y docker.io
+          docker --version
         '''
       }
     }
 
-    stage('Build') {
+    stage('Build Application') {
       steps {
         sh '''
           cd java-maven-sonar-argocd-helm-k8s/spring-boot-app
@@ -45,9 +46,9 @@ pipeline {
           sh '''
             cd java-maven-sonar-argocd-helm-k8s/spring-boot-app
             mvn clean verify \
-            org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar \
-            -Dsonar.host.url=${SONAR_URL} \
-            -Dsonar.token=${SONAR_TOKEN}
+              org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar \
+              -Dsonar.host.url=${SONAR_URL} \
+              -Dsonar.token=${SONAR_TOKEN}
           '''
         }
       }
@@ -76,18 +77,15 @@ pipeline {
       steps {
         withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
           sh '''
+            # ALWAYS run git commands from repo root
+            cd $WORKSPACE
+
             git config user.email "krazesh7@gmail.com"
             git config user.name "Rajeshk-23"
 
             sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" \
-            java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
+              java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
 
             git add java-maven-sonar-argocd-helm-k8s/spring-boot-app-manifests/deployment.yml
-            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-          '''
-        }
-      }
-    }
-  }
-}
+            git commit -m "Update deployment image to version ${BUILD_NUMBER}" || echo "No changes to commit"
+            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${_
