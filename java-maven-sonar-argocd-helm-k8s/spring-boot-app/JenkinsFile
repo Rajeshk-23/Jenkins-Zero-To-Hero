@@ -42,4 +42,15 @@ pipeline {
         withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
           sh '''
             cd java-maven-sonar-argocd-helm-k8s/spring-boot-app
-            mvn clean ver
+            mvn clean verify \
+            org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar \
+            -Dsonar.host.url=${SONAR_URL} \
+            -Dsonar.token=${SONAR_TOKEN}
+          '''
+        }
+      }
+    }
+
+    stage('Build and Push Docker Image') {
+      environment {
+        DOCKER_IMAGE_
